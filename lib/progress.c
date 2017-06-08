@@ -380,11 +380,10 @@ int Curl_pgrsUpdate(struct connectdata *conn)
 
     data->progress.lastshow = now.tv_sec;
 
-    /* Let's do the "current speed" thing, which should use the fastest
-       of the dl/ul speeds. Store the faster speed at entry 'nowindex'. */
-    data->progress.speeder[ nowindex ] =
-      data->progress.downloaded>data->progress.uploaded?
-      data->progress.downloaded:data->progress.uploaded;
+    /* Do the "current speed" thing for both dl and ul. Store the current
+       amount at entry 'nowindex'. */
+    data->progress.dlspeeder[ nowindex ] = data->progress.downloaded;
+    data->progress.ulspeeder[ nowindex ] = data->progress.uploaded;
 
     /* remember the exact time for this moment */
     data->progress.speeder_time [ nowindex ] = now;
@@ -418,8 +417,13 @@ int Curl_pgrsUpdate(struct connectdata *conn)
 
       /* Calculate the average speed the last 'span_ms' milliseconds */
       {
-        curl_off_t amount = data->progress.speeder[nowindex]-
-          data->progress.speeder[checkindex];
+        curl_off_t amount = data->progress.dlspeeder[nowindex]-
+          data->progress.dlspeeder[checkindex];
+        curl_off_t ul = data->progress.ulspeeder[nowindex]-
+          data->progress.ulspeeder[checkindex];
+        if(ul > amount)
+          /* if upload is faster, use that value */
+          amount = ul;
 
         if(amount > CURL_OFF_T_C(4294967) /* 0xffffffff/1000 */)
           /* the 'amount' value is bigger than would fit in 32 bits if

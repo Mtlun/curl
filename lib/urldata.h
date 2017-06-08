@@ -1239,7 +1239,8 @@ struct Progress {
 
 #define CURR_TIME (5+1) /* 6 entries for 5 seconds */
 
-  curl_off_t speeder[ CURR_TIME ];
+  curl_off_t dlspeeder[ CURR_TIME ];
+  curl_off_t ulspeeder[ CURR_TIME ];
   struct timeval speeder_time[ CURR_TIME ];
   int speeder_c;
 };
